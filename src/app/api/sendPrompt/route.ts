@@ -36,9 +36,8 @@ export async function POST(request: Request) {
     const error = err as AxiosError;
     console.error(`Error with OpenAI API request: ${error.message}`);
     return getResponse(500, {
-      error: {
-        message: error.response?.data || error.message,
-      },
+      //@ts-ignore
+      message: error.response?.data?.error?.message || error.message,
     });
   }
 }

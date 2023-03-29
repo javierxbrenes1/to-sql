@@ -1,11 +1,14 @@
 "use client";
 import PromptInput from "./components/promptInput";
 import styles from "./page.module.css";
+import 'react-toastify/dist/ReactToastify.css';
 
 import { Container, NextUIProvider, Text } from "@nextui-org/react";
 import Editor from "./components/Editor";
 import { useState } from "react";
 import Image from "next/image";
+import { ToastContainer, toast } from "react-toastify";
+import axios, { AxiosError, AxiosResponse } from "axios";
 
 export default function Home() {
   const [response, setResponse] = useState("");
@@ -15,24 +18,22 @@ export default function Home() {
     try {
       setCalling(true);
       setResponse("");
-      const response = await fetch("/api/sendPrompt", {
-        method: "POST",
+      const response = await axios.post<any, AxiosResponse<{ result: string }>>("/api/sendPrompt", {
+        prompt
+      }, {
         headers: {
           "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt }),
-      });
-      const data = await response.json();
-      setResponse(data.result);
-      setCalling(false);
+        }
+      })
+      console.log(response);
+      setResponse(response.data.result);
     } catch (err) {
-      const error = err as {
-        error: {
-          message: string;
-        };
-      };
-
+      const error = err as AxiosError;
+      //@ts-ignore;
+      toast.error(`😥 ${error.response?.data?.message || 'Hubo un error intentalo de nuevo'}`);
       // do something with the error
+    } finally {
+      setCalling(false)
     }
   };
 
@@ -52,7 +53,9 @@ export default function Home() {
             <Editor code={response} />
           </div>
         </div>
+        
       </main>
+      <ToastContainer position="top-right" autoClose={10000} pauseOnFocusLoss />
     </NextUIProvider>
   );
 }
